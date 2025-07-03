@@ -1,0 +1,359 @@
+GUIA DE ESTUDIO - PATRONES DE DISEÑO Y GRASP
+===================================================
+
+Este documento consolida y explica los patrones de diseño estructurales, de comportamiento y los principios GRASP, utilizando ejemplos de código claros y definiciones concisas.
+
+---------------------------------------------------
+SEMANA 11: PATRONES ESTRUCTURALES
+---------------------------------------------------
+
+Los patrones estructurales se centran en cómo las clases y objetos se componen para formar estructuras más grandes y flexibles.
+
+==================
+1. PROXY
+==================
+
+* **¿Qué es?**
+    [cite_start]Es un objeto sustituto que controla el acceso a otro objeto[cite: 36]. [cite_start]Actúa como un intermediario para realizar acciones adicionales como control de seguridad, caché o carga diferida (lazy loading)[cite: 41].
+
+* **Propósito Principal:**
+    [cite_start]Control de acceso y optimización de recursos[cite: 25].
+
+* **Elementos Clave:**
+    -   [cite_start]**Interfaz Común (Subject):** Define la interfaz tanto para el objeto real como para el proxy[cite: 1, 26].
+    -   [cite_start]**Objeto Real (RealSubject):** La clase original cuyo acceso se quiere controlar[cite: 2].
+    -   **Proxy:** El objeto que suplanta al objeto real. [cite_start]Almacena una referencia al objeto real y gestiona el acceso a él[cite: 3, 39].
+
+* **Ejemplo de Código (Java-like):**
+
+    // Interfaz común
+    public interface PaymentService {
+        [cite_start]void processPayment(double amount, String user); [cite: 1]
+    }
+
+    // Objeto Real: procesa el pago directamente.
+    public class RealPaymentService implements PaymentService {
+        public void processPayment(double amount, String user) {
+            // Lógica de procesamiento de pago
+            System.out.println("Procesando pago de " + amount + " para " + user);
+        }
+    }
+
+    // Proxy: controla el acceso y añade una capa de seguridad.
+    public class PaymentProxy implements PaymentService {
+        private RealPaymentService realService;
+        private AuthService authService; // Servicio para verificar permisos
+
+        public PaymentProxy(AuthService authService) {
+            [cite_start]this.authService = authService; [cite: 3]
+        }
+
+        public void processPayment(double amount, String user) {
+            // Lógica de control añadida por el proxy
+            if (authService.isAuthorized(user)) {
+                if (realService == null) {
+                    realService = new RealPaymentService(); // Lazy initialization
+                }
+                realService.processPayment(amount, user);
+            } else {
+                System.out.println("Acceso denegado.");
+            }
+        }
+    }
+
+==================
+2. BRIDGE
+==================
+
+* **¿Qué es?**
+    [cite_start]Desacopla una abstracción de su implementación, permitiendo que ambas evolucionen de forma independiente[cite: 42].
+
+* **Propósito Principal:**
+    [cite_start]Evitar una explosión de clases cuando se tienen múltiples dimensiones de variación (ej. formas y colores, modelos y motores de renderizado)[cite: 46].
+
+* **Elementos Clave:**
+    -   [cite_start]**Abstracción (Abstraction):** La jerarquía principal que usa una referencia a un Implementador[cite: 5].
+    -   [cite_start]**Implementador (Implementor):** La interfaz para la jerarquía de implementación[cite: 4].
+    -   [cite_start]Se crean dos jerarquías de clases independientes: una para la abstracción y otra para la implementación[cite: 27].
+
+* **Ejemplo de Código (Java-like):**
+
+    // Interfaz Implementador: el "puente" para renderizar
+    public interface RenderEngine {
+        [cite_start]void renderModel(String modelData); [cite: 4]
+    }
+
+    // Implementador Concreto A
+    public class VulkanEngine implements RenderEngine {
+        public void renderModel(String modelData) {
+            System.out.println("Renderizando " + modelData + " con Vulkan.");
+        }
+    }
+
+    // Implementador Concreto B
+    public class OpenGLEngine implements RenderEngine {
+        public void renderModel(String modelData) {
+            System.out.println("Renderizando " + modelData + " con OpenGL.");
+        }
+    }
+
+    // Abstracción: define la interfaz de alto nivel
+    public abstract class Model {
+        protected RenderEngine renderer; // Referencia al implementador
+        
+        public Model(RenderEngine renderer) {
+            [cite_start]this.renderer = renderer; [cite: 5]
+        }
+        public abstract void render();
+    }
+
+    // Abstracción Refinada
+    public class CharacterModel extends Model {
+        private String modelData;
+
+        public CharacterModel(String modelData, RenderEngine renderer) {
+            super(renderer); // Pasa el implementador a la clase base
+            [cite_start]this.modelData = modelData; [cite: 7]
+        }
+
+        public void render() {
+            renderer.renderModel(modelData); // Delega la implementación
+        }
+    }
+
+---------------------------------------------------
+SEMANAS 12 Y 13: PATRONES DE COMPORTAMIENTO
+---------------------------------------------------
+
+Estos patrones se ocupan de los algoritmos y la asignación de responsabilidades entre objetos.
+
+==================
+1. STATE
+==================
+
+* **¿Qué es?**
+    Permite que un objeto altere su comportamiento cuando su estado interno cambia. [cite_start]El objeto parecerá cambiar su clase[cite: 47].
+
+* **Propósito Principal:**
+    [cite_start]Gestionar estados como objetos independientes, facilitando la adición de nuevos estados y transiciones[cite: 28].
+
+* **Elementos Clave:**
+    -   [cite_start]**Contexto (Context):** El objeto que tiene un estado que cambia (ej. `Order`)[cite: 9].
+    -   [cite_start]**Estado (State):** Interfaz que encapsula el comportamiento asociado a un estado particular[cite: 8].
+    -   [cite_start]**Estados Concretos (Concrete States):** Implementaciones de la interfaz de estado; cada una maneja el comportamiento para un estado específico[cite: 29].
+
+* **Ejemplo de Código (Java-like):**
+
+    // Contexto
+    public class Order {
+        private OrderState state;
+        public void setState(OrderState state) { this.state = state; [cite_start]} [cite: 9]
+        public void nextState() { state.next(this); [cite_start]} [cite: 9]
+        public void prevState() { state.prev(this); }
+    }
+
+    // Interfaz de Estado
+    public interface OrderState {
+        [cite_start]void next(Order order); [cite: 8]
+        [cite_start]void prev(Order order); [cite: 8]
+        void printStatus();
+    }
+
+    // Estado Concreto
+    public class ProcessingOrderState implements OrderState {
+        public void next(Order order) { order.setState(new ShippedOrderState()); }
+        public void prev(Order order) { System.out.println("El pedido ya está en procesamiento."); }
+        public void printStatus() { System.out.println("Estado: Procesando."); }
+    }
+
+==================
+2. OBSERVER
+==================
+
+* **¿Qué es?**
+    [cite_start]Define una dependencia uno-a-muchos entre objetos, de modo que cuando un objeto (el sujeto) cambia de estado, todos sus dependientes (observadores) son notificados y actualizados automáticamente[cite: 51].
+
+* **Propósito Principal:**
+    [cite_start]Notificar cambios a múltiples objetos interesados sin acoplarlos fuertemente[cite: 30].
+
+* **Elementos Clave:**
+    -   **Sujeto (Observable):** Objeto que es observado. [cite_start]Mantiene una lista de observadores [cite: 30] [cite_start]y tiene métodos para agregarlos y notificarlos[cite: 10].
+    -   [cite_start]**Observador (Observer):** Interfaz con un método `update` que es llamado cuando el sujeto cambia[cite: 11].
+
+* **Ejemplo de Código (Java-like):**
+
+    // Sujeto (Observable)
+    public interface OrderObservable {
+        [cite_start]void addObserver(OrderObserver observer); [cite: 10]
+        [cite_start]void notifyObservers(); [cite: 10]
+    }
+
+    // Observador
+    public interface OrderObserver {
+        [cite_start]void update(OrderState state); [cite: 11]
+    }
+
+    // Sujeto Concreto
+    public class OrderSystem implements OrderObservable {
+        private List<OrderObserver> observers = new ArrayList<>();
+        private OrderState state;
+        public void setState(OrderState state) {
+            [cite_start]this.state = state; [cite: 12]
+            notifyObservers();
+        }
+        public void addObserver(OrderObserver observer) { observers.add(observer); }
+        public void notifyObservers() {
+            for (OrderObserver o : observers) {
+                o.update(state);
+            }
+        }
+    }
+
+    // Observador Concreto
+    public class NotificationService implements OrderObserver {
+        public void update(OrderState state) {
+            System.out.println("Notificación: El pedido ha cambiado de estado.");
+        }
+    }
+
+
+==================
+3. COMMAND
+==================
+
+* **¿Qué es?**
+    [cite_start]Encapsula una solicitud (una acción) como un objeto, permitiendo parametrizar clientes con diferentes solicitudes, encolar o registrar solicitudes, y soportar operaciones que se pueden deshacer[cite: 31, 55].
+
+* **Propósito Principal:**
+    Separar el objeto que invoca una operación del objeto que sabe cómo realizarla. [cite_start]Permite crear historiales para hacer/deshacer[cite: 31].
+
+* **Elementos Clave:**
+    -   [cite_start]**Comando (Command):** Interfaz con métodos como `execute()` y `undo()`[cite: 13].
+    -   [cite_start]**Comando Concreto (Concrete Command):** Implementa la interfaz y contiene una referencia al receptor (el objeto que ejecutará la acción)[cite: 14].
+    -   [cite_start]**Receptor (Receiver):** El objeto que realiza el trabajo real (ej. `Luz`, `UserService`)[cite: 14, 56].
+    -   **Invocador (Invoker):** Pide al comando que ejecute la solicitud.
+    -   [cite_start]**Historial (History):** Almacena los comandos ejecutados para permitir deshacerlos[cite: 15].
+
+* **Ejemplo de Código (Java-like):**
+
+    // Interfaz de Comando
+    public interface Command {
+        [cite_start]void execute(); [cite: 13]
+        [cite_start]void undo(); [cite: 13]
+    }
+
+    // Comando Concreto
+    public class CreateUserCommand implements Command {
+        private UserService receiver; // El receptor
+        public CreateUserCommand(UserService receiver) { this.receiver = receiver; [cite_start]} [cite: 14]
+        public void execute() { receiver.createUser(); }
+        public void undo() { receiver.deleteUser(); }
+    }
+
+    // Invocador/Historial
+    public class CommandHistory {
+        [cite_start]private Stack<Command> history = new Stack<>(); [cite: 15]
+        public void executeCommand(Command cmd) {
+            cmd.execute();
+            history.push(cmd);
+        }
+        public void undoLastCommand() {
+            if (!history.isEmpty()) {
+                history.pop().undo();
+            }
+        }
+    }
+
+
+==================
+4. MEMENTO
+==================
+
+* **¿Qué es?**
+    [cite_start]Sin violar la encapsulación, captura y externaliza el estado interno de un objeto para que pueda ser restaurado a ese estado más tarde[cite: 32, 58].
+
+* **Propósito Principal:**
+    [cite_start]Implementar funcionalidades de "deshacer" (undo) o puntos de guardado (snapshots)[cite: 32].
+
+* **Elementos Clave:**
+    -   [cite_start]**Originador (Originator):** El objeto cuyo estado se quiere guardar (ej. `TextEditor`)[cite: 16]. Crea y utiliza Mementos.
+    -   **Memento:** Un objeto simple que almacena el estado del Originador. [cite_start]Debe ser inmutable o proteger su contenido[cite: 17, 63].
+    -   **Caretaker (Guardián):** El objeto que almacena los Mementos (ej. `History`), pero no los modifica. [cite_start]Es responsable de cuándo guardar y restaurar[cite: 18, 33].
+
+* **Ejemplo de Código (Java-like):**
+
+    // Memento: almacena el estado. Inmutable.
+    public class TextMemento {
+        private final String savedContent;
+        public TextMemento(String content) { this.savedContent = content; [cite_start]} [cite: 17]
+        public String getSavedContent() { return savedContent; }
+    }
+
+    // Originador: crea y restaura su estado a partir de un Memento.
+    public class TextEditor {
+        private String content;
+        public void setContent(String content) { this.content = content; }
+        public TextMemento save() { return new TextMemento(this.content); [cite_start]} [cite: 16, 61]
+        public void restore(TextMemento memento) { this.content = memento.getSavedContent(); [cite_start]} [cite: 16, 62]
+    }
+
+    // Caretaker: gestiona los Mementos.
+    public class History {
+        [cite_start]private Stack<TextMemento> states = new Stack<>(); [cite: 18]
+        public void saveState(TextEditor editor) { states.push(editor.save()); [cite_start]} [cite: 18]
+        public void undo(TextEditor editor) {
+            if (!states.isEmpty()) {
+                editor.restore(states.pop());
+            }
+        }
+    }
+
+---------------------------------------------------
+SEMANA 14: ANTIPATRONES
+---------------------------------------------------
+
+* **¿Qué son?**
+    [cite_start]Soluciones comunes a problemas recurrentes que son ineficientes, contraproducentes o dañinas a largo plazo[cite: 65].
+
+* **¿Por qué evitarlos?**
+    -   [cite_start]Dificultan el mantenimiento y la evolución del software[cite: 66].
+    -   [cite_start]Aumentan la probabilidad de errores[cite: 66].
+    -   [cite_start]Complican el trabajo en equipo[cite: 66].
+
+* **Ejemplos Comunes:**
+    -   [cite_start]**God Object / The Blob:** Una clase que sabe demasiado o hace demasiado, centralizando una gran cantidad de funcionalidades[cite: 66].
+    -   [cite_start]**Spaghetti Code:** Código con una estructura de control enrevesada y difícil de seguir[cite: 66].
+    -   [cite_start]**Copy-Paste Programming:** Duplicar código en lugar de crear abstracciones reutilizables[cite: 66].
+
+---------------------------------------------------
+SEMANA 15: PATRONES GRASP
+---------------------------------------------------
+
+* **¿Qué son?**
+    [cite_start]No son patrones de diseño, sino **principios o guías** para asignar responsabilidades a las clases y objetos en el diseño orientado a objetos[cite: 67, 34]. El objetivo es crear software con bajo acoplamiento y alta cohesión.
+
+* **Principios Clave:**
+
+    ➤ **Experto en Información (Information Expert)**
+    -   [cite_start]**Principio:** Asigna una responsabilidad a la clase que tiene la información necesaria para cumplirla[cite: 68].
+    -   [cite_start]**Ejemplo:** La clase `ShoppingCart` debe tener el método `calculateTotal()` porque conoce la lista de `items` y sus precios[cite: 19].
+
+    ➤ **Controlador (Controller)**
+    -   **Principio:** Asigna la responsabilidad de manejar los eventos del sistema a una clase no-UI que representa el sistema en general (Controlador de Fachada) o un caso de uso (Controlador de Caso de Uso).
+    -   [cite_start]**Ejemplo:** `OrderController` recibe una petición web para crear una orden y coordina a los objetos de servicio (`OrderService`) para que realicen el trabajo[cite: 20].
+
+    ➤ **Creador (Creator)**
+    -   **Principio:** Asigna a la clase B la responsabilidad de crear objetos de la clase A si B "contiene" a A, "usa" a A, o tiene los datos para inicializar A.
+    -   [cite_start]**Ejemplo:** Una `Factura` es responsable de crear objetos `Item` porque los agrega y gestiona[cite: 72].
+
+    ➤ **Alta Cohesión (High Cohesion)**
+    -   **Principio:** Mantén las responsabilidades de una clase enfocadas, relacionadas y manejables. [cite_start]La clase debe tener un propósito claro y único[cite: 71].
+    -   [cite_start]**Ejemplo:** Una clase `PaymentService` solo debe manejar lógica de pagos y reembolsos, no de notificaciones o inventario[cite: 21].
+
+    ➤ **Bajo Acoplamiento (Low Coupling)**
+    -   **Principio:** Reduce las dependencias entre clases. [cite_start]Un cambio en una clase no debería requerir cambios en muchas otras[cite: 71].
+    -   **Ejemplo:** Un sistema de E-Commerce depende de la interfaz `PaymentService`, no de una clase concreta como `CreditCardService`. [cite_start]Así, se pueden añadir nuevos métodos de pago sin cambiar el sistema principal[cite: 21].
+
+    ➤ **Polimorfismo (Polymorphism)**
+    -   **Principio:** Cuando existan variaciones de comportamiento basadas en el tipo, asigna la responsabilidad a través de operaciones polimórficas.
+    -   [cite_start]**Ejemplo:** En lugar de usar `if/else` para procesar un pago, se define una interfaz `PaymentMethod`[cite: 22]. [cite_start]Las clases `CreditCard` y `PayPal` implementan esta interfaz, cada una con su propia lógica de `pay()`[cite: 22].

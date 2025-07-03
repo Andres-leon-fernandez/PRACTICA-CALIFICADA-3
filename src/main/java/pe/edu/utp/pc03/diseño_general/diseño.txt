@@ -1,0 +1,55 @@
+1. Caso práctico:
+Sistema: Gestión de Tutorías Académicas UTP
+Diseña una solución orientada a objetos para el sistema de gestión de tutorías
+académicas de tu facultad. El sistema debe permitir:
+• Registrar tutores y estudiantes.
+• Registrar solicitudes de tutorías (estado: solicitada, aceptada, rechazada,
+completada).
+• Notificar automáticamente al estudiante y tutor sobre cambios de estado.
+• Permitir al administrador ejecutar comandos como “asignar tutor”,
+“reprogramar sesión”, “suspender tutoría”.
+• Registrar un historial de cambios de estado y permitir revertir (undo) ciertas
+acciones.
+• Proteger el acceso a funciones administrativas solo a usuarios con permisos.
+• Soportar dos formas de visualizar tutorías: como lista y como calendario
+(intercambiables).
+
+
+2. Actividades (Etapas y Evidencias)
+
+A. Parte 1: Diseño y análisis
+
+    1. Identifica 5 clases principales del sistema y relaciónalas con al menos 5
+    patrones.
+    
+    *   usuario (clase padre para administrador, docente y alumno)  factory method
+    *   tutoria (clase que almacena informacion de las tutorias)    state 
+    *   notificacion (notifica al tutor sobre una nueva solicitud de tutoria y al alumno sobre el estado de la tutoria (solicitada, aceptada, rechazada,completada))    observer 
+    *   Sistema (coordina y ejecutas las diferentes operaciones)    singleton 
+    *   Comando (la implementacion de historiales uwu)  command
+
+    2. Justifica por qué aplicaste cada patrón.
+    
+    factory method(creacion de ususarios)
+    state (al cambiar de estado (solicitada, aceptada, rechazada,completada) la clase tutoria modifica y altera su comportaminto)
+    observer (permite usar el cambio de estado de la tutoria para usar la notificacion cundo tutoria cambia de estado)
+    singleton (un solo sistema para todo)
+    Command (para poder implemetar el historial de cambios de estado o a futuro historial de tutorias del alumno  o deocente)
+
+    3. Detecta y describe dos antipatrones que podrían presentarse en una mala
+    implementación del sistema.
+
+    espagueti: el diseño es muy xd puede que cause errores si se sigue desarrollando como mala organizacion de carpetas 
+
+    objejto dios: el sistema consetra gran parte de las funciones en general esto puede a que una mala implementacion mande al tacho todo ahhhhhhh
+    
+    4. Diseña un diagrama de clases UML.
+    
+
+
+
+B. Parte 2: Implementación
+1. Implementa en Java una parte clave del sistema, donde se apliquen al menos
+3 patrones.
+2. Incluye en el código comentarios explicativos.
+3. Criterios de Evaluación
